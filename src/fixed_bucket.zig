@@ -19,7 +19,6 @@ pub const Config = struct {
     verbose_log: bool = false,
 };
 
-
 /// BucketAllocator allocates fixed-size chunks of memory but preallocates
 /// multiple chunks with a single syscall. It is written for self-educating purposes. 
 pub fn BucketAllocator(comptime config: Config) type {
@@ -40,14 +39,14 @@ pub fn BucketAllocator(comptime config: Config) type {
             const slice = try self.backing_allocator.alloc(u8, config.alloc_size * config.group_size);
             var i: usize = 0;
             while (i < config.group_size) {
-                bucket[i] = slice[i*config.alloc_size..(i+1)*config.alloc_size];
+                bucket[i] = slice[i * config.alloc_size .. (i + 1) * config.alloc_size];
                 free_mask[i] = true;
                 i += 1;
             }
             initialized = true;
         }
 
-        fn get_free_index() Error!usize{
+        fn get_free_index() Error!usize {
             for (free_mask) |is_free, i| {
                 if (is_free) {
                     free_mask[i] = false;
@@ -57,17 +56,11 @@ pub fn BucketAllocator(comptime config: Config) type {
             return error.OutOfMemory;
         }
 
-        fn alloc(
-            allocator: *Allocator,
-            len: usize,
-            ptr_align: u29,
-            len_align: u29,
-            ret_addr: usize
-        ) Error![]u8 {
+        fn alloc(allocator: *Allocator, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Error![]u8 {
             assert(len == config.alloc_size);
 
             const self = @fieldParentPtr(Self, "allocator", allocator);
-            
+
             if (!initialized) {
                 try self.init();
             }
@@ -112,7 +105,6 @@ pub fn BucketAllocator(comptime config: Config) type {
         }
     };
 }
-
 
 test "allocate different regions" {
     var ba = BucketAllocator(Config{
